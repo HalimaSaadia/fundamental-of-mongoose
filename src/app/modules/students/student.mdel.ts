@@ -1,9 +1,12 @@
-import { Schema, model } from 'mongoose'
-import { Guardian, Student } from './student.interface'
+import { Callback, Schema, model } from 'mongoose'
+import { TGuardian, TStudent } from './student.interface'
 import validator from 'validator'
+import bcrypt from 'bcrypt'
+import config from '../../config'
+import { CallbackError } from 'mongoose'
 
 
-const guardian = new Schema<Guardian>({
+const guardian = new Schema<TGuardian>({
   fatherContact: { type: String, required: true },
   fatherName: { type: String, required: true },
   fatherOccupation: { type: String, required: true },
@@ -12,7 +15,7 @@ const guardian = new Schema<Guardian>({
   motherOccupation: { type: String, required: true },
 })
 
-const studentSchema = new Schema<Student>({
+const studentSchema = new Schema<TStudent>({
   name: {
     firstName: {
       type: String,
@@ -31,7 +34,7 @@ const studentSchema = new Schema<Student>({
       type: String,
       required: true,
       validate: {
-        validator: (value:string) => validator.isAlpha(value)
+        validator: (value: string) => validator.isAlpha(value),
       },
     },
   },
@@ -46,6 +49,27 @@ const studentSchema = new Schema<Student>({
     required: [true, 'gender is required'],
   },
   guardian: guardian,
+  isDeleted: { type: Boolean, default: false },
+}, { toJSON: { virtuals: true }, toObject: {virtuals: true} })
+studentSchema.pre('save', async function (next) {
+  try {
+    this.address = await bcrypt.hash(this.address, Number(config.salt))
+    next()
+  } catch (error) {
+    next(error as CallbackError)
+  }
 })
+// studentSchema.pre('aggregate', async function (next){
+//   console.log(this)
+//   this.pipeline().unshift({$match:{isDeleted: false}})
+//   next()
+// })
 
-export const StudentModel = model<Student>('Student', studentSchema)
+// studentSchema.pre("findOne", function(next){
+//   this.findOne({isDeleted:false})
+//   next()
+// })
+studentSchema.virtual("fullname").get(function(){
+  return `${this.name.firstName} ${this.name.middleName} ${this.name.lastName}`
+})
+export const StudentModel = model<TStudent>('Student', studentSchema)

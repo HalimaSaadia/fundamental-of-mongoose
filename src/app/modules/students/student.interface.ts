@@ -1,6 +1,6 @@
 
 
-export type Guardian = {
+export type TGuardian = {
   fatherName: string
   fatherOccupation: string
   motherName: string
@@ -9,19 +9,30 @@ export type Guardian = {
   motherContact: string
 }
 
-type StudentName =  {
+type TStudentName = {
   firstName: string
   middleName?: string
   lastName: string
 }
 
-export type Student = {
-  name:StudentName
+export type TStudent = {
+  name: TStudentName
   contact: string
   emergencyContact: string
   gender: 'male' | 'female'
   address: string
   email: string
   avatar?: string
-  guardian: Guardian
+  guardian: TGuardian,
+  isDeleted: boolean
 }
+
+// export type StudentMethods = {
+//   isUserExists(id: string): Promise<TStudent>
+// }
+
+// export type studentModel = Model<
+//   TStudent,
+//   Record<string, never>,
+//   StudentMethods
+// >
